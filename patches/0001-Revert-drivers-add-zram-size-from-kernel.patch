@@ -1,0 +1,49 @@
+From 50ec8e223c0fb959b33fe5217c78c41de42615e8 Mon Sep 17 00:00:00 2001
+From: Hatsune07 m <frostleaf363@gmail.com>
+Date: Tue, 18 Jun 2024 02:49:39 +0000
+Subject: [PATCH] Revert "drivers: add zram size from kernel"
+
+This reverts commit 8121f8fe7c9287260d90891c6a0c84bfa55f6b60.
+---
+ drivers/block/zram/Kconfig    | 5 -----
+ drivers/block/zram/zram_drv.c | 7 -------
+ 2 files changed, 12 deletions(-)
+
+diff --git a/drivers/block/zram/Kconfig b/drivers/block/zram/Kconfig
+index f90e83ae2..aea0d577b 100644
+--- a/drivers/block/zram/Kconfig
++++ b/drivers/block/zram/Kconfig
+@@ -38,8 +38,3 @@ config ZRAM_MEMORY_TRACKING
+ 	  /sys/kernel/debug/zram/zramX/block_state.
+ 
+ 	  See Documentation/blockdev/zram.txt for more information.
+-
+-config ZRAM_SIZE_OVERRIDE
+-	int "zram size"
+-	range 1 16
+-	default 2
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index 56c733dcc..1ea5d8545 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -1741,17 +1741,10 @@ static ssize_t disksize_store(struct device *dev,
+ 	struct zram *zram = dev_to_zram(dev);
+ 	int err;
+ 
+-	// add zram-config
+-	#ifndef CONFIG_ZRAM_SIZE_OVERRIDE
+ 	disksize = memparse(buf, NULL);
+ 	if (!disksize)
+ 		return -EINVAL;
+ 
+-	#else
+-	disksize = (u64)SZ_1G * CONFIG_ZRAM_SIZE_OVERRIDE;
+-	pr_info("Overriding zram size to %li", disksize);
+-    #endif
+-
+ 	down_write(&zram->init_lock);
+ 	if (init_done(zram)) {
+ 		pr_info("Cannot change disksize for initialized device\n");
+-- 
+2.43.2
+
