@@ -14,7 +14,7 @@ config SPOOF_VERITY
       then it will work as intended ??? IDK
 
       ~ of course this is just a test ~
-      
+
 menu "NetHunter Support"
 
 config NETHUNTER_SUPPORT
@@ -449,4 +449,3 @@ config NETHUNTER_WIFI_DRIVERS_SUPPORT
 	select USB_NET_RNDIS_WLAN
 
 endmenu
-
