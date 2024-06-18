@@ -1,0 +1,63 @@
+From 9111dc032257bf5d8409b4bd478bc0e8f0cc2caa Mon Sep 17 00:00:00 2001
+From: Hatsune07 m <frostleaf363@gmail.com>
+Date: Tue, 18 Jun 2024 03:00:57 +0000
+Subject: [PATCH 1/2] KernelSU: import kernelSU v0.9.4
+
+---
+ .gitmodules      | 3 +++
+ KernelSU         | 1 +
+ drivers/Kconfig  | 1 +
+ drivers/Makefile | 2 ++
+ drivers/kernelsu | 1 +
+ 5 files changed, 8 insertions(+)
+ create mode 100644 .gitmodules
+ create mode 160000 KernelSU
+ create mode 120000 drivers/kernelsu
+
+diff --git a/.gitmodules b/.gitmodules
+new file mode 100644
+index 000000000..61f75fdb8
+--- /dev/null
++++ b/.gitmodules
+@@ -0,0 +1,3 @@
++[submodule "KernelSU"]
++	path = KernelSU
++	url = https://github.com/tiann/KernelSU.git
+diff --git a/KernelSU b/KernelSU
+new file mode 160000
+index 000000000..109442f8c
+--- /dev/null
++++ b/KernelSU
+@@ -0,0 +1 @@
++Subproject commit 109442f8c4c7692af6562bdad6fd9f39dc1f935b
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index fd81a26a7..b460aeb02 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -212,4 +212,5 @@ source "drivers/nfc/Kconfig"
+ source "drivers/nfc/pn553-i2c/Kconfig"
+ source "drivers/nfc/p73-spi/Kconfig"
+ #endif VENDOR_EDIT
++source "drivers/kernelsu/Kconfig"
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index fdaab09fe..d23dd4d02 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -178,3 +178,5 @@ obj-$(CONFIG_NVMEM)		+= nvmem/
+ obj-$(CONFIG_FPGA)		+= fpga/
+ obj-$(CONFIG_TEE)		+= tee/
+ obj-$(CONFIG_TRUSTY)	+= trusty/
++
++obj-$(CONFIG_KSU) += kernelsu/
+diff --git a/drivers/kernelsu b/drivers/kernelsu
+new file mode 120000
+index 000000000..9e51d0d62
+--- /dev/null
++++ b/drivers/kernelsu
+@@ -0,0 +1 @@
++../KernelSU/kernel
+\ No newline at end of file
+-- 
+2.43.2
+
