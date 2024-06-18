@@ -94,7 +94,7 @@ config NETHUNTER_ETHERNET_SUPPORT
 
 	tristate "Ethernet drivers support"
 
-	default y if NETHUNTER_SUPPORT
+	default n if NETHUNTER_SUPPORT
 
 	depends on NETHUNTER_SUPPORT
 
@@ -111,7 +111,7 @@ config NETHUNTER_SDR_SUPPORT
 
 	tristate "SDR support"
 
-	default y if NETHUNTER_SUPPORT
+	default n if NETHUNTER_SUPPORT
 
 	depends on NETHUNTER_SUPPORT
 
@@ -138,7 +138,7 @@ config NETHUNTER_HID_SUPPORT
 
 	tristate "HID support"
 
-	default y if NETHUNTER_SUPPORT
+	default n if NETHUNTER_SUPPORT
 
 	depends on NETHUNTER_SUPPORT
 
@@ -331,7 +331,7 @@ config NETHUNTER_USB_SUPPORT
 
 	tristate "USB support"
 
-	default y if NETHUNTER_SUPPORT
+	default n if NETHUNTER_SUPPORT
 
 	depends on NETHUNTER_SUPPORT
 
@@ -382,7 +382,7 @@ config NETHUNTER_WIFI_DRIVERS_SUPPORT
 
 	tristate "WiFi drivers support"
 
-	default y if NETHUNTER_SUPPORT
+	default n if NETHUNTER_SUPPORT
 
 	depends on NETHUNTER_SUPPORT
 
