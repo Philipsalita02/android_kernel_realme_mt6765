@@ -15,6 +15,13 @@ config SPOOF_VERITY
 
       ~ of course this is just a test ~
 
+config KERNEL_ALWAYS_PERMISSIVE_MODE
+     bool "make kernel always permissive mode"
+     default n
+     help
+     This option for always kernel in permissive mode,
+     when u build KernelSU this option is recommended.
+      
 menu "NetHunter Support"
 
 config NETHUNTER_SUPPORT
