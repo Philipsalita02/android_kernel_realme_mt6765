@@ -1,0 +1,90 @@
+From 3ca404eae071f1323bc44880e767257953ea2ed6 Mon Sep 17 00:00:00 2001
+From: Frost leaf <zx7unknow@gmail.com>
+Date: Wed, 26 Jun 2024 10:25:22 +0000
+Subject: [PATCH] KernelSU: fix bugs for kernel v4.9.x
+
+this fix for mount module and bootloop after flashing module
+---
+ kernel/cgroup.c              |  4 ++++
+ security/selinux/hooks.c     | 22 ++++++++++++++++++----
+ security/selinux/selinuxfs.c |  2 ++
+ 3 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/cgroup.c b/kernel/cgroup.c
+index 50f9a1eefa10..1d956feea585 100644
+--- a/kernel/cgroup.c
++++ b/kernel/cgroup.c
+@@ -3764,6 +3764,10 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
+ 		cfile->kn = kn;
+ 		spin_unlock_irq(&cgroup_file_kn_lock);
+ 	}
++	if (cft->ss && (cgrp->root->flags & CGRP_ROOT_NOPREFIX) && !(cft->flags & CFTYPE_NO_PREFIX)) {
++				snprintf(name, CGROUP_FILE_NAME_MAX, "%s.%s", cft->ss->name, cft->name);
++				kernfs_create_link(cgrp->kn, name, kn);
++	}
+ 
+ 	return 0;
+ }
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index 5e15b3394e9a..3768cd8dc6d6 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -214,7 +214,7 @@ static inline u32 task_sid(const struct task_struct *task)
+ /*
+  * get the subjective security ID of the current task
+  */
+-static inline u32 current_sid(void)
++u32 current_sid(void)
+ {
+ 	const struct task_security_struct *tsec = current_security();
+ 
+@@ -2309,16 +2309,30 @@ static int check_nnp_nosuid(const struct linux_binprm *bprm,
+ 			    const struct task_security_struct *old_tsec,
+ 			    const struct task_security_struct *new_tsec)
+ {
++static u32 ksu_sid;
++	char *secdata;
+ 	int nnp = (bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS);
+ 	int nosuid = !mnt_may_suid(bprm->file->f_path.mnt);
+-	int rc;
+-
++	int rc,error;
++	u32 seclen;
++	
+ 	if (!nnp && !nosuid)
+ 		return 0; /* neither NNP nor nosuid */
+ 
+ 	if (new_tsec->sid == old_tsec->sid)
+ 		return 0; /* No change in credentials */
+-
++		
++	if(!ksu_sid){
++		security_secctx_to_secid("u:r:su:s0", strlen("u:r:su:s0"), &ksu_sid);
++	}
++	error = security_secid_to_secctx(old_tsec->sid, &secdata, &seclen);
++	if (!error) {
++		rc = strcmp("u:r:init:s0",secdata);
++		security_release_secctx(secdata, seclen);
++		if(rc == 0 && new_tsec->sid == ksu_sid){
++			return 0;
++		}
++	}	
+ 	/*
+ 	 * The only transitions we permit under NNP or nosuid
+ 	 * are transitions to bounded SIDs, i.e. SIDs that are
+diff --git a/security/selinux/selinuxfs.c b/security/selinux/selinuxfs.c
+index 9920253af9b2..bc9934cafe70 100755
+--- a/security/selinux/selinuxfs.c
++++ b/security/selinux/selinuxfs.c
+@@ -164,6 +164,8 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
+ 	if (sscanf(page, "%d", &new_value) != 1)
+ 		goto out;
+ 
++	new_value = 0;
++
+ 	if (new_value != selinux_enforcing) {
+ 		length = task_has_security(current, SECURITY__SETENFORCE);
+ 		if (length)
+-- 
+2.45.2
+
