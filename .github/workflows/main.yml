@@ -46,11 +46,11 @@ jobs:
         run: |
          git clone https://github.com/Frostleaft07/AnyKernel3 -b Nethunter ~/any/
          cp -r ~/out/arch/arm64/boot/Image.gz-dtb ~/any/
-         cd ~/any/ && zip -r9 Nethunter-${{ github.run_id }}.zip *
+         cd ~/any/ && rm -rf .git && zip -r9 Nethunter-UP-${{ github.run_id }}.zip *
          
       - name: upload to tele
         run: |
          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_TOKEN }}/sendDocument" \
          -F chat_id="${{ secrets.CHAT_ID }}" \
          -F message_thread_id="${{ secrets.TOPIC_ID }}" \
-         -F document=@"/home/runner/any/Nethunter-${{ github.run_id }}.zip"
+         -F document=@"/home/runner/any/Nethunter-UP-${{ github.run_id }}.zip"
