@@ -635,11 +635,7 @@ void verity_status(struct dm_target *ti, status_type_t type,
 
 	switch (type) {
 	case STATUSTYPE_INFO:
-	#ifdef CONFIG_SPOOF_VERITY
-        DMEMIT("%c", 'V');
-    #else
-        DMEMIT("%c", v->hash_failed ? 'C' : 'V');
-    #endif // CONFIG_SPOOF_VERITY
+		DMEMIT("%c", v->hash_failed ? 'C' : 'V');
 		break;
 	case STATUSTYPE_TABLE:
 		DMEMIT("%u %s %s %u %u %llu %llu %s ",
