@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 4.9.190 Kernel Configuration
+# Linux/arm64 4.9.192 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -4747,12 +4747,6 @@ CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
 # CONFIG_NFC_PN553_DEVICES is not set
 
 #
-# KernelSU
-#
-CONFIG_KSU=y
-# CONFIG_KSU_DEBUG is not set
-
-#
 # Firmware Drivers
 #
 CONFIG_ARM_PSCI_FW=y
@@ -5474,3 +5468,13 @@ CONFIG_FONT_AUTOSELECT=y
 CONFIG_SG_POOL=y
 CONFIG_ARCH_HAS_SG_CHAIN=y
 CONFIG_SBITMAP=y
+
+#
+# Hatsune menu
+#
+CONFIG_KERNEL_ALWAYS_PERMISSIVE_MODE=y
+
+#
+# NetHunter Support
+#
+# CONFIG_NETHUNTER_SUPPORT is not set
