@@ -1,20 +1,3 @@
-config SPOOF_VERITY
-    bool "Spoof dm-verity status as valid"
-    default n
-    help
-      This option will spoof the dm-verity status to always appear as valid (V),
-      Magisk v24 and below doesn't support it, so use Magisk v25+ so that Magisk works.
-
-      If:
-
-      ro.boot.verifiedbootstate is green
-      ro.boot.veritymode is enforcing
-      ro.boot.vbmeta.device_state is locked
-      
-      then it will work as intended ??? IDK
-
-      ~ of course this is just a test ~
-
 config KERNEL_ALWAYS_PERMISSIVE_MODE
      bool "make kernel always permissive mode"
      default n
