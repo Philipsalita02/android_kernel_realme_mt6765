@@ -1564,6 +1564,9 @@ static void configfs_composite_unbind(struct usb_gadget *gadget)
 
 	cdev = get_gadget_data(gadget);
 	gi = container_of(cdev, struct gadget_info, cdev);
+	spin_lock_irqsave(&gi->spinlock, flags);
+	gi->unbind = 1;
+	spin_unlock_irqrestore(&gi->spinlock, flags);
 
 #ifdef VENDOR_EDIT
 /*lizhijie@BSP.CHG.Basic. lzj 2019/12/09 add for usb*/
