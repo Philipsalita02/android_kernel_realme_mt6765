@@ -64,7 +64,6 @@ struct mutex {
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 	struct lockdep_map	dep_map;
 #endif
-
 };
 
 /*
@@ -78,7 +77,6 @@ struct mutex_waiter {
 	void			*magic;
 #endif
 };
-
 
 #ifdef CONFIG_DEBUG_MUTEXES
 # include <linux/mutex-debug.h>

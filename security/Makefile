@@ -2,9 +2,6 @@
 # Makefile for the kernel security code
 #
 
-subdir-ccflags-y += -Werror
-subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/include
-
 obj-$(CONFIG_KEYS)			+= keys/
 subdir-$(CONFIG_SECURITY_SELINUX)	+= selinux
 subdir-$(CONFIG_SECURITY_SMACK)		+= smack
@@ -32,5 +29,3 @@ obj-$(CONFIG_CGROUP_DEVICE)		+= device_cgroup.o
 # Object integrity file lists
 subdir-$(CONFIG_INTEGRITY)		+= integrity
 obj-$(CONFIG_INTEGRITY)			+= integrity/
-
-obj-$(CONFIG_HIE)			+= hie/

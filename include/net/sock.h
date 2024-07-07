@@ -183,12 +183,6 @@ struct sock_common {
 	struct proto		*skc_prot;
 	possible_net_t		skc_net;
 
-	//#ifdef VENDOR_EDIT
-	//Junyuan.Huang@PSW.CN.WiFi.Network.internet.1197891, 2018/04/10,
-	//Add code for appo sla function
-	u32 skc_oppo_mark;
-	//#endif /* VENDOR_EDIT */
-
 #if IS_ENABLED(CONFIG_IPV6)
 	struct in6_addr		skc_v6_daddr;
 	struct in6_addr		skc_v6_rcv_saddr;
@@ -256,7 +250,6 @@ struct sock_common {
   *	@sk_ll_usec: usecs to busypoll when there is no data
   *	@sk_allocation: allocation mode
   *	@sk_pacing_rate: Pacing rate (if supported by transport/packet scheduler)
-  *	@sk_pacing_status: Pacing status (requested, handled by sch_fq)
   *	@sk_max_pacing_rate: Maximum pacing rate (%SO_MAX_PACING_RATE)
   *	@sk_sndbuf: size of send buffer in bytes
   *	@sk_padding: unused element for alignment
@@ -350,16 +343,7 @@ struct sock {
 #define sk_flags		__sk_common.skc_flags
 #define sk_rxhash		__sk_common.skc_rxhash
 
-//#ifdef VENDOR_EDIT
-//Junyuan.Huang@PSW.CN.WiFi.Network.internet.1197891, 2018/04/10,
-//Add code for appo sla function
-#define oppo_sla_mark   __sk_common.skc_oppo_mark
-//#endif /* VENDOR_EDIT */
-
 	socket_lock_t		sk_lock;
-	atomic_t		sk_drops;
-	int			sk_rcvlowat;
-	struct sk_buff_head	sk_error_queue;
 	struct sk_buff_head	sk_receive_queue;
 	/*
 	 * The backlog queue is special, it is always used with
@@ -376,13 +360,14 @@ struct sock {
 		struct sk_buff	*tail;
 	} sk_backlog;
 #define sk_rmem_alloc sk_backlog.rmem_alloc
-
 	int			sk_forward_alloc;
+
+	__u32			sk_txhash;
 #ifdef CONFIG_NET_RX_BUSY_POLL
-	unsigned int		sk_ll_usec;
-	/* ===== mostly read cache line ===== */
 	unsigned int		sk_napi_id;
+	unsigned int		sk_ll_usec;
 #endif
+	atomic_t		sk_drops;
 	int			sk_rcvbuf;
 
 	struct sk_filter __rcu	*sk_filter;
@@ -395,31 +380,11 @@ struct sock {
 #endif
 	struct dst_entry	*sk_rx_dst;
 	struct dst_entry __rcu	*sk_dst_cache;
+	/* Note: 32bit hole on 64bit arches */
+	atomic_t		sk_wmem_alloc;
 	atomic_t		sk_omem_alloc;
 	int			sk_sndbuf;
-
-	/* ===== cache line for TX ===== */
-	int			sk_wmem_queued;
-	atomic_t		sk_wmem_alloc;
-	unsigned long		sk_tsq_flags;
-	struct sk_buff		*sk_send_head;
 	struct sk_buff_head	sk_write_queue;
-	__s32			sk_peek_off;
-	int			sk_write_pending;
-	u32			sk_pacing_status; /* see enum sk_pacing */
-	long			sk_sndtimeo;
-	struct timer_list	sk_timer;
-	__u32			sk_priority;
-	__u32			sk_mark;
-	u32			sk_pacing_rate; /* bytes per second */
-	u32			sk_max_pacing_rate;
-	struct page_frag	sk_frag;
-	netdev_features_t	sk_route_caps;
-	netdev_features_t	sk_route_nocaps;
-	int			sk_gso_type;
-	unsigned int		sk_gso_max_size;
-	gfp_t			sk_allocation;
-	__u32			sk_txhash;
 
 	/*
 	 * Because of non atomicity rules, all
@@ -435,18 +400,31 @@ struct sock {
 #define SK_PROTOCOL_MAX U8_MAX
 	kmemcheck_bitfield_end(flags);
 
+	int			sk_wmem_queued;
+	gfp_t			sk_allocation;
+	u32			sk_pacing_rate; /* bytes per second */
+	u32			sk_max_pacing_rate;
+	netdev_features_t	sk_route_caps;
+	netdev_features_t	sk_route_nocaps;
+	int			sk_gso_type;
+	unsigned int		sk_gso_max_size;
 	u16			sk_gso_max_segs;
+	int			sk_rcvlowat;
 	unsigned long	        sk_lingertime;
+	struct sk_buff_head	sk_error_queue;
 	struct proto		*sk_prot_creator;
 	rwlock_t		sk_callback_lock;
 	int			sk_err,
 				sk_err_soft;
 	u32			sk_ack_backlog;
 	u32			sk_max_ack_backlog;
-	kuid_t			sk_uid;
+	__u32			sk_priority;
+	__u32			sk_mark;
 	struct pid		*sk_peer_pid;
 	const struct cred	*sk_peer_cred;
 	long			sk_rcvtimeo;
+	long			sk_sndtimeo;
+	struct timer_list	sk_timer;
 	ktime_t			sk_stamp;
 #if BITS_PER_LONG==32
 	seqlock_t		sk_stamp_seq;
@@ -456,6 +434,10 @@ struct sock {
 	u32			sk_tskey;
 	struct socket		*sk_socket;
 	void			*sk_user_data;
+	struct page_frag	sk_frag;
+	struct sk_buff		*sk_send_head;
+	__s32			sk_peek_off;
+	int			sk_write_pending;
 #ifdef CONFIG_SECURITY
 	void			*sk_security;
 #endif
@@ -470,12 +452,6 @@ struct sock {
 	void                    (*sk_destruct)(struct sock *sk);
 	struct sock_reuseport __rcu	*sk_reuseport_cb;
 	struct rcu_head		sk_rcu;
-};
-
-enum sk_pacing {
-	SK_PACING_NONE		= 0,
-	SK_PACING_NEEDED	= 1,
-	SK_PACING_FQ		= 2,
 };
 
 #define __sk_user_data(sk) ((*((void __rcu **)&(sk)->sk_user_data)))
@@ -1681,18 +1657,12 @@ static inline void sock_graft(struct sock *sk, struct socket *parent)
 	sk->sk_wq = parent->wq;
 	parent->sk = sk;
 	sk_set_socket(sk, parent);
-	sk->sk_uid = SOCK_INODE(parent)->i_uid;
 	security_sock_graft(sk, parent);
 	write_unlock_bh(&sk->sk_callback_lock);
 }
 
 kuid_t sock_i_uid(struct sock *sk);
 unsigned long sock_i_ino(struct sock *sk);
-
-static inline kuid_t sock_net_uid(const struct net *net, const struct sock *sk)
-{
-	return sk ? sk->sk_uid : make_kuid(net->user_ns, 0);
-}
 
 static inline u32 net_tx_rndhash(void)
 {

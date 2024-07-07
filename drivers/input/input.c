@@ -29,7 +29,6 @@
 #include <linux/rcupdate.h>
 #include "input-compat.h"
 
-
 MODULE_AUTHOR("Vojtech Pavlik <vojtech@suse.cz>");
 MODULE_DESCRIPTION("Input core");
 MODULE_LICENSE("GPL");
@@ -264,7 +263,6 @@ static int input_handle_abs_event(struct input_dev *dev,
 static int input_get_disposition(struct input_dev *dev,
 			  unsigned int type, unsigned int code, int *pval)
 {
-	
 	int disposition = INPUT_IGNORE_EVENT;
 	int value = *pval;
 
@@ -372,7 +370,6 @@ static void input_handle_event(struct input_dev *dev,
 			       unsigned int type, unsigned int code, int value)
 {
 	int disposition = input_get_disposition(dev, type, code, &value);
-
 
 	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
 		add_input_randomness(type, code, value);
@@ -853,18 +850,16 @@ static int input_default_setkeycode(struct input_dev *dev,
 		}
 	}
 
-	if (*old_keycode <= KEY_MAX) {
-		__clear_bit(*old_keycode, dev->keybit);
-		for (i = 0; i < dev->keycodemax; i++) {
-			if (input_fetch_keycode(dev, i) == *old_keycode) {
-				__set_bit(*old_keycode, dev->keybit);
-				/* Setting the bit twice is useless, so break */
-				break;
-			}
+	__clear_bit(*old_keycode, dev->keybit);
+	__set_bit(ke->keycode, dev->keybit);
+
+	for (i = 0; i < dev->keycodemax; i++) {
+		if (input_fetch_keycode(dev, i) == *old_keycode) {
+			__set_bit(*old_keycode, dev->keybit);
+			break; /* Setting the bit twice is useless, so break */
 		}
 	}
 
-	__set_bit(ke->keycode, dev->keybit);
 	return 0;
 }
 
@@ -920,13 +915,9 @@ int input_set_keycode(struct input_dev *dev,
 	 * Simulate keyup event if keycode is not present
 	 * in the keymap anymore
 	 */
-	if (old_keycode > KEY_MAX) {
-		dev_warn(dev->dev.parent ?: &dev->dev,
-			 "%s: got too big old keycode %#x\n",
-			 __func__, old_keycode);
-	} else if (test_bit(EV_KEY, dev->evbit) &&
-		   !is_event_supported(old_keycode, dev->keybit, KEY_MAX) &&
-		   __test_and_clear_bit(old_keycode, dev->key)) {
+	if (test_bit(EV_KEY, dev->evbit) &&
+	    !is_event_supported(old_keycode, dev->keybit, KEY_MAX) &&
+	    __test_and_clear_bit(old_keycode, dev->key)) {
 		struct input_value vals[] =  {
 			{ EV_KEY, old_keycode, 0 },
 			input_value_sync

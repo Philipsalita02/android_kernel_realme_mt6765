@@ -197,9 +197,6 @@ extern int mod_timer_pending(struct timer_list *timer, unsigned long expires);
  */
 #define NEXT_TIMER_MAX_DELTA	((1UL << 30) - 1)
 
-/* To be used from cpusets, only */
-extern void timer_quiesce_cpu(void *cpup);
-
 /*
  * Timer-statistics info:
  */

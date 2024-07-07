@@ -34,7 +34,6 @@
 #include <linux/mutex.h>
 #include <linux/anon_inodes.h>
 #include <linux/device.h>
-#include <linux/freezer.h>
 #include <asm/uaccess.h>
 #include <asm/io.h>
 #include <asm/mman.h>
@@ -43,7 +42,6 @@
 #include <linux/seq_file.h>
 #include <linux/compat.h>
 #include <linux/rculist.h>
-#include <mt-plat/fpsgo_common.h>
 
 /*
  * LOCKING:
@@ -1626,7 +1624,7 @@ static inline struct timespec64 ep_set_mstimeout(long ms)
 static int ep_poll(struct eventpoll *ep, struct epoll_event __user *events,
 		   int maxevents, long timeout)
 {
-	int res = 0, eavail, timed_out = 0, rc;
+	int res = 0, eavail, timed_out = 0;
 	unsigned long flags;
 	u64 slack = 0;
 	wait_queue_t wait;
@@ -1675,22 +1673,8 @@ fetch_events:
 			}
 
 			spin_unlock_irqrestore(&ep->lock, flags);
-
-			xgf_epoll_igather_timer(current, to, 1);
-
-#if defined(VENDOR_EDIT) && defined(CONFIG_OPPO_HEALTHINFO)
-// Liujie.Xie@TECH.Kernel.Sched, 2019/08/29, add for stuck monitor
-            current->in_epoll = 1;
-#endif
-			rc = freezable_schedule_hrtimeout_range(to, slack,
-				HRTIMER_MODE_ABS);
-			if (!rc)
+			if (!schedule_hrtimeout_range(to, slack, HRTIMER_MODE_ABS))
 				timed_out = 1;
-#if defined(VENDOR_EDIT) && defined(CONFIG_OPPO_HEALTHINFO)
-// Liujie.Xie@TECH.Kernel.Sched, 2019/08/29, add for stuck monitor
-            current->in_epoll = 0;
-#endif
-			xgf_epoll_igather_timer(current, to, rc ? -1 : 0);
 
 			spin_lock_irqsave(&ep->lock, flags);
 		}

@@ -132,9 +132,6 @@ enum {
 	RTM_GETMDB = 86,
 #define RTM_GETMDB RTM_GETMDB
 
-	RTM_NORA = 87,
-#define RTM_NORA RTM_NORA
-
 	RTM_NEWNSID = 88,
 #define RTM_NEWNSID RTM_NEWNSID
 	RTM_DELNSID = 89,
@@ -321,7 +318,6 @@ enum rtattr_type_t {
 	RTA_ENCAP,
 	RTA_EXPIRES,
 	RTA_PAD,
-	RTA_UID,
 	__RTA_MAX
 };
 
