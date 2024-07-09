@@ -99,12 +99,9 @@ void nf_queue_entry_release_refs(struct nf_queue_entry *entry)
 EXPORT_SYMBOL_GPL(nf_queue_entry_release_refs);
 
 /* Bump dev refs so they don't vanish while packet is out */
-bool nf_queue_entry_get_refs(struct nf_queue_entry *entry)
+void nf_queue_entry_get_refs(struct nf_queue_entry *entry)
 {
 	struct nf_hook_state *state = &entry->state;
-
-	if (state->sk && !atomic_inc_not_zero(&state->sk->sk_refcnt))
-		return false;
 
 	if (state->in)
 		dev_hold(state->in);
@@ -124,7 +121,6 @@ bool nf_queue_entry_get_refs(struct nf_queue_entry *entry)
 			dev_hold(physdev);
 	}
 #endif
-	return true;
 }
 EXPORT_SYMBOL_GPL(nf_queue_entry_get_refs);
 
@@ -195,11 +191,7 @@ static int __nf_queue(struct sk_buff *skb, const struct nf_hook_state *state,
 		.size	= sizeof(*entry) + afinfo->route_key_size,
 	};
 
-	if (!nf_queue_entry_get_refs(entry)) {
-		kfree(entry);
-		return -ENOTCONN;
-	}
-
+	nf_queue_entry_get_refs(entry);
 	skb_dst_force(skb);
 	afinfo->saveroute(skb, entry);
 	status = qh->outfn(entry, queuenum);
