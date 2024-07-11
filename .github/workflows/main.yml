@@ -19,16 +19,12 @@ jobs:
 
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
-        with: 
+        with:
           swap-size-gb: 5
-         
+
       - name: setup package
         run: |
          ./S
-         
-      - name: cloning KernelSU
-        run: |
-         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
 
       - name: clean up
         run: |
@@ -37,7 +33,7 @@ jobs:
       - name: check clang version
         run: |
          clang -v
-         
+
       - name: start up
         run: |
          ./build
@@ -47,7 +43,7 @@ jobs:
          git clone https://github.com/Frostleaft07/AnyKernel3 -b Nethunter ~/any/
          cp -r ~/out/arch/arm64/boot/Image.gz-dtb ~/any/
          cd ~/any/ && rm -rf .git && zip -r9 Nethunter-UP-${{ github.run_id }}.zip *
-         
+
       - name: upload to tele
         run: |
          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_TOKEN }}/sendDocument" \
