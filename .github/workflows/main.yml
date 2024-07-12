@@ -28,7 +28,7 @@ jobs:
 
       - name: clean up
         run: |
-         make clean; make mrproper; rm -rf out
+         make clean; make mrproper
 
       - name: check clang version
         run: |
@@ -41,12 +41,33 @@ jobs:
       - name: anykernel ~ zipping
         run: |
          git clone https://github.com/Frostleaft07/AnyKernel3 -b Nethunter ~/any/
-         cp -r ~/out/arch/arm64/boot/Image.gz-dtb ~/any/
-         cd ~/any/ && rm -rf .git && zip -r9 Nethunter-UP-${{ github.run_id }}.zip *
+         mv ~/out/arch/arm64/boot/Image.gz-dtb ~/any/
+         cd ~/any/ && rm -rf .git && zip -r9 Nethunter-v4.9.337.zip *
 
-      - name: upload to tele
+      - name: cloning KernelSU
+        run: |
+         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
+
+      - name: start up ~ dirty build KernelSU
+        run: |
+         ./build
+
+      - name: anykernel KernelSU ~ zipping
+        run: |
+         git clone https://github.com/Frostleaft07/AnyKernel3 -b KernelSU ~/ksu/
+         mv ~/out/arch/arm64/boot/Image.gz-dtb ~/ksu/
+         cd ~/ksu/ && rm -rf .git && zip -r9 Nethunter-v4.9.337-KernelSU-v0.9.5.zip *
+
+      - name: upload to telegram [1/2]
         run: |
          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_TOKEN }}/sendDocument" \
          -F chat_id="${{ secrets.CHAT_ID }}" \
          -F message_thread_id="${{ secrets.TOPIC_ID }}" \
-         -F document=@"/home/runner/any/Nethunter-UP-${{ github.run_id }}.zip"
+         -F document=@"/home/runner/ksu/Nethunter-v4.9.337-KernelSU-v0.9.5.zip"
+
+      - name: upload to telegram [2/2]
+        run: |
+         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_TOKEN }}/sendDocument" \
+         -F chat_id="${{ secrets.CHAT_ID }}" \
+         -F message_thread_id="${{ secrets.TOPIC_ID }}" \
+         -F document=@"/home/runner/any/Nethunter-v4.9.337.zip"
